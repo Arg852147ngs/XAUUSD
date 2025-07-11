@@ -1,4 +1,5 @@
+Flask
+numpy>=1.26.0
 pandas
-requests
 pandas_ta
-numpy==1.23.5
+python-telegram-bot
