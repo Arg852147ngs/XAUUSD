@@ -1,5 +1,4 @@
-flask
-requests
 pandas
-pandas_ta=0.3.14b0
-numpy=1.23.5
+requests
+pandas_ta
+numpy==1.23.5
