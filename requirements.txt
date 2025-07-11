@@ -3,3 +3,4 @@ pandas_ta
 python-telegram-bot
 flask
 requests
+numpy==1.24.4
