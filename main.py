@@ -1,3 +1,15 @@
+import pandas as pd
+import pandas_ta as ta
+def add_indicators(df):
+    df['EMA50'] = ta.ema(df['close'], length=50)
+    df['EMA200'] = ta.ema(df['close'], length=200)
+    macd = ta.macd(df['close'])
+    df['MACD'] = macd['MACD_12_26_9']
+    df['MACD_signal'] = macd['MACDs_12_26_9']
+    df['ATR'] = ta.atr(df['high'], df['low'], df['close'], length=14)
+    df['RSI'] = ta.rsi(df['close'], length=14)
+    df.dropna(inplace=True)
+    return df
 import requests
 import time
 import datetime
