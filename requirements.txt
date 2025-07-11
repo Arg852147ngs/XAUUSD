@@ -1,4 +1,4 @@
-requests
-numpy
+pandas
+pandas_ta
 python-telegram-bot
-pytz
+flask
