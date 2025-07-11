@@ -1,5 +1,8 @@
 import pandas as pd
-import pandas_ta as ta
+import pandas as pd
+import pandas_ta.overlap as overlap
+import pandas_ta.momentum as momentum
+import pandas_ta.trend as trend
 def add_indicators(df):
     df['EMA50'] = ta.ema(df['close'], length=50)
     df['EMA200'] = ta.ema(df['close'], length=200)
