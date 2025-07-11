@@ -1,49 +1,46 @@
-=== main.py ===
 
-import pandas as pd import numpy as np import requests import pandas_ta as ta from datetime import datetime import pytz
+# === main.py ===
+from flask import Flask
+import pandas as pd
+import numpy as np
+import requests
+from datetime import datetime
+import pytz
 
-=== Telegram Setup ===
+app = Flask(__name__)
 
-TELEGRAM_TOKEN = "38172768175:AAGe_4nBGJthZYdN3UQr3VL97x8-5I5bNng" CHAT_ID = "1644693247"
+@app.route('/')
+def home():
+    return 'XAUUSD Signal Bot is running.'
 
-def send_telegram_alert(message): url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage" data = {"chat_id": CHAT_ID, "text": message} requests.post(url, data=data)
+@app.route('/signal')
+def signal():
+    # Simulated example of price data
+    df = pd.DataFrame({
+        'close': [3320, 3325, 3322, 3330, 3340, 3350]
+    })
+    
+    # Calculate simple RSI
+    delta = df['close'].diff()
+    gain = delta.where(delta > 0, 0)
+    loss = -delta.where(delta < 0, 0)
+    avg_gain = gain.rolling(window=14).mean()
+    avg_loss = loss.rolling(window=14).mean()
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    
+    last_rsi = rsi.iloc[-1]
+    now = datetime.now(pytz.timezone("Africa/Nairobi")).strftime("%H:%M:%S")
+    
+    if last_rsi > 70:
+        signal = "🔴 SELL - RSI Overbought"
+    elif last_rsi < 30:
+        signal = "🟢 BUY - RSI Oversold"
+    else:
+        signal = "⚠️ No strong signal (RSI = {:.2f})".format(last_rsi)
 
-=== Price Data Fetching (Mocked for now) ===
+    return f"Time: {now} | RSI: {last_rsi:.2f} | Signal: {signal}"
 
-def fetch_price_data(): # Example OHLC structure; replace with live XAUUSD data source later data = { "time": pd.date_range(end=datetime.now(), periods=100, freq="5min"), "open": np.random.uniform(3300, 3350, 100), "high": np.random.uniform(3350, 3380, 100), "low": np.random.uniform(3280, 3320, 100), "close": np.random.uniform(3300, 3360, 100), } return pd.DataFrame(data)
-
-=== Signal Logic ===
-
-def check_for_signals(df): df.ta.ema(length=50, append=True) df.ta.ema(length=200, append=True) df.ta.rsi(length=14, append=True) df.ta.macd(append=True) df.ta.atr(length=14, append=True)
-
-last = df.iloc[-1]
-
-signal = None
-reason = []
-
-if last["RSI_14"] > 50:
-    if last["EMA_50"] > last["EMA_200"]:
-        signal = "BUY"
-        reason.append("Trend Up (50 > 200 EMA)")
-elif last["RSI_14"] < 50:
-    if last["EMA_50"] < last["EMA_200"]:
-        signal = "SELL"
-        reason.append("Trend Down (50 < 200 EMA)")
-
-if signal:
-    confidence = 75
-    message = (
-        f"XAUUSD {signal} Signal\n"
-        f"Confidence: {confidence}%\n"
-        f"Reason: {'; '.join(reason)}\n"
-        f"Price: {last['close']:.2f}\nTime: {datetime.now(pytz.timezone('Africa/Nairobi')).strftime('%H:%M:%S')}"
-    )
-    send_telegram_alert(message)
-else:
-    print("No valid signal this round.")
-
-=== Main Execution ===
-
-if name == "main": df = fetch_price_data() check_for_signals(df)
-
+if __name__ == '__main__':
+    app.run(debug=True)
 
