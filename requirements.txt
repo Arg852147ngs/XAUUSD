@@ -1,5 +1,5 @@
 flask
 requests
 pandas
-pandas_ta==0.3.14b0
-numpy<1.24
+pandas_ta=0.3.14b0
+numpy=1.23.5
