@@ -1,3 +1,1 @@
-
- ┣ 📄 main.py
- ┣ 📄 requirements.txt
+# XAUUSD
