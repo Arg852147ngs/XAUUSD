@@ -1,53 +1,49 @@
-from flask import Flask
-import pandas as pd
-import requests
-import pandas_ta.overlap as ta_overlap
-import pandas_ta.momentum as ta_momentum
-import pandas_ta.trend as ta_trend
+=== main.py ===
 
-app = Flask(__name__)
+import pandas as pd import numpy as np import requests import pandas_ta as ta from datetime import datetime import pytz
 
-TELEGRAM_TOKEN = "38172768175:AAGe_4nBGJthZYdN3UQr3VL97x8-5I5bNng"
-CHAT_ID = "1644693247"
+=== Telegram Setup ===
 
-@app.route('/')
-def home():
-    return "✅ Bot is live."
+TELEGRAM_TOKEN = "38172768175:AAGe_4nBGJthZYdN3UQr3VL97x8-5I5bNng" CHAT_ID = "1644693247"
 
-@app.route('/check_signal')
-def check_signal():
-    # Load price data
-    url = "https://raw.githubusercontent.com/argwingsmakuto/XAUUSD-bot/main/xauusd_clean.csv"
-    df = pd.read_csv(url)
+def send_telegram_alert(message): url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage" data = {"chat_id": CHAT_ID, "text": message} requests.post(url, data=data)
 
-    # Indicators
-    df['EMA50'] = ta_overlap.ema(df['close'], length=50)
-    df['EMA200'] = ta_overlap.ema(df['close'], length=200)
-    df['RSI'] = ta_momentum.rsi(df['close'], length=14)
-    macd_df = ta_trend.macd(df['close'])
-    df['MACD'] = macd_df['MACD_12_26_9']
-    df['MACD_signal'] = macd_df['MACDs_12_26_9']
-    df['ATR'] = ta_trend.atr(df['high'], df['low'], df['close'])
+=== Price Data Fetching (Mocked for now) ===
 
-    # Signal Logic
-    last = df.iloc[-1]
-    signal = ""
+def fetch_price_data(): # Example OHLC structure; replace with live XAUUSD data source later data = { "time": pd.date_range(end=datetime.now(), periods=100, freq="5min"), "open": np.random.uniform(3300, 3350, 100), "high": np.random.uniform(3350, 3380, 100), "low": np.random.uniform(3280, 3320, 100), "close": np.random.uniform(3300, 3360, 100), } return pd.DataFrame(data)
 
-    if last['EMA50'] > last['EMA200'] and last['MACD'] > last['MACD_signal'] and last['RSI'] > 55:
-        signal = f"📈 BUY Signal\nRSI: {round(last['RSI'],2)}\nPrice: {last['close']}"
-    elif last['EMA50'] < last['EMA200'] and last['MACD'] < last['MACD_signal'] and last['RSI'] < 45:
-        signal = f"📉 SELL Signal\nRSI: {round(last['RSI'],2)}\nPrice: {last['close']}"
+=== Signal Logic ===
 
-    if signal:
-        send_telegram(signal)
-        return f"✅ Sent: {signal}"
-    else:
-        return "⚠️ No valid signal found."
+def check_for_signals(df): df.ta.ema(length=50, append=True) df.ta.ema(length=200, append=True) df.ta.rsi(length=14, append=True) df.ta.macd(append=True) df.ta.atr(length=14, append=True)
 
-def send_telegram(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": message}
-    requests.post(url, json=payload)
+last = df.iloc[-1]
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+signal = None
+reason = []
+
+if last["RSI_14"] > 50:
+    if last["EMA_50"] > last["EMA_200"]:
+        signal = "BUY"
+        reason.append("Trend Up (50 > 200 EMA)")
+elif last["RSI_14"] < 50:
+    if last["EMA_50"] < last["EMA_200"]:
+        signal = "SELL"
+        reason.append("Trend Down (50 < 200 EMA)")
+
+if signal:
+    confidence = 75
+    message = (
+        f"XAUUSD {signal} Signal\n"
+        f"Confidence: {confidence}%\n"
+        f"Reason: {'; '.join(reason)}\n"
+        f"Price: {last['close']:.2f}\nTime: {datetime.now(pytz.timezone('Africa/Nairobi')).strftime('%H:%M:%S')}"
+    )
+    send_telegram_alert(message)
+else:
+    print("No valid signal this round.")
+
+=== Main Execution ===
+
+if name == "main": df = fetch_price_data() check_for_signals(df)
+
+
