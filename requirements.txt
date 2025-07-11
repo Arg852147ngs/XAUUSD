@@ -1,6 +1,6 @@
-numpy=1.23.5
+numpy==1.23.5
 pandas
-pandas_ta
-requests
+pandas_ta==0.3.14b0
 flask
+requests
 python-telegram-bot
